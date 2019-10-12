@@ -59,14 +59,12 @@ func worker(mu *sync.Mutex, wg *sync.WaitGroup, q chan string, tmpdir, outdir st
 			continue
 		}
 		_, err = io.Copy(f, resp.Body)
+		resp.Body.Close()
+		f.Close()
 		if err != nil {
-			resp.Body.Close()
-			f.Close()
 			log.Print("Copy Fail: ", url)
 			continue
 		}
-		f.Close()
-		resp.Body.Close()
 
 		mu.Lock()
 		n := atomic.AddInt64(count, -1)
