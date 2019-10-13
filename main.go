@@ -75,12 +75,26 @@ func worker(mu *sync.Mutex, wg *sync.WaitGroup, q chan string, tmpdir, outdir st
 	}
 }
 
+func safesearch_s(b bool) string {
+	if b {
+		return ""
+	}
+	return "off"
+}
+
 func main() {
 	var count int64
 	var outdir string
+	var safesearch bool
 	flag.Int64Var(&count, "n", 100, "count")
 	flag.StringVar(&outdir, "o", ".", "output directory")
+	flag.BoolVar(&safesearch, "s", true, "safe search")
 	flag.Parse()
+
+	err := os.MkdirAll(outdir, 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	tmpdir, err := ioutil.TempDir("", "downloader")
 	if err != nil {
@@ -109,7 +123,7 @@ loop:
 		param := url.Values{
 			"q":          flag.Args(),
 			"count":      {fmt.Sprint(count)},
-			"safesearch": {"off"},
+			"safesearch": {safesearch_s(safesearch)},
 			"offset":     {fmt.Sprint(offset)},
 		}
 
