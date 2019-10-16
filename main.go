@@ -91,6 +91,11 @@ func main() {
 	flag.BoolVar(&safesearch, "s", true, "safe search")
 	flag.Parse()
 
+	if flag.NArg() == 0 {
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	err := os.MkdirAll(outdir, 0755)
 	if err != nil {
 		log.Fatal(err)
@@ -121,7 +126,7 @@ loop:
 		}
 
 		param := url.Values{
-			"q":          flag.Args(),
+			"q":          {strings.Join(flag.Args(), " ")},
 			"count":      {fmt.Sprint(count)},
 			"safesearch": {safesearch_s(safesearch)},
 			"offset":     {fmt.Sprint(offset)},
