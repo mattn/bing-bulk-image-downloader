@@ -171,6 +171,7 @@ loop:
 			"count":      {fmt.Sprint(count)},
 			"safesearch": {safesearch_s(safesearch)},
 			"offset":     {fmt.Sprint(offset)},
+			"FORM":       {"HDRSC2"},
 		}
 
 		query := "https://www.bing.com/images/search?" + param.Encode()
