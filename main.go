@@ -17,6 +17,44 @@ import (
 	"sync/atomic"
 )
 
+func moveFile(destination, source string) (err error) {
+	src, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	fi, err := src.Stat()
+	if err != nil {
+		return err
+	}
+	flag := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	perm := fi.Mode() & os.ModePerm
+	dst, err := os.OpenFile(destination, flag, perm)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		dst.Close()
+		os.Remove(destination)
+		return err
+	}
+	err = dst.Close()
+	if err != nil {
+		return err
+	}
+	err = src.Close()
+	if err != nil {
+		return err
+	}
+	err = os.Remove(source)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func worker(mu *sync.Mutex, wg *sync.WaitGroup, q chan string, tmpdir, outdir string, count *int64) {
 	defer wg.Done()
 	for {
@@ -69,7 +107,10 @@ func worker(mu *sync.Mutex, wg *sync.WaitGroup, q chan string, tmpdir, outdir st
 		mu.Lock()
 		n := atomic.AddInt64(count, -1)
 		if n >= 0 {
-			os.Rename(oldname, filepath.Join(outdir, fmt.Sprintf("%05d-", n+1)+fname))
+			err = moveFile(filepath.Join(outdir, fmt.Sprintf("%05d-", n+1)+fname), oldname)
+			if err != nil {
+				log.Print("Rename Fail: ", url)
+			}
 		}
 		mu.Unlock()
 	}
