@@ -158,7 +158,7 @@ func main() {
 		go worker(&mu, &wg, q, tmpdir, outdir, &count)
 	}
 
-	offset := 0
+	first := 0
 
 loop:
 	for {
@@ -170,7 +170,7 @@ loop:
 			"q":          {strings.Join(flag.Args(), " ")},
 			"count":      {fmt.Sprint(count)},
 			"safesearch": {safesearch_s(safesearch)},
-			"offset":     {fmt.Sprint(offset)},
+			"first":      {fmt.Sprint(first)},
 			"FORM":       {"HDRSC2"},
 		}
 
@@ -199,9 +199,9 @@ loop:
 			}
 			if mq, err := url.QueryUnescape(mm[1]); err == nil {
 				q <- mq
+				first++
 			}
 		}
-		offset++
 	}
 
 	close(q)
